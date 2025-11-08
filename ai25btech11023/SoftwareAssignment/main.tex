@@ -1,0 +1,176 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subcaption} 
+\usepackage{multicol}
+\title{Software Assignment: Image
+Compression Using Truncated SVD}
+\author{AI25BTECH11023 - Pratik R}
+\date{}
+
+\begin{document}
+
+\maketitle
+\let\vec\mathbf
+\section{Summary}
+
+The singular value decomposition of a matrix $A$ is the factorization of $A$ into the
+product of three matrices $A = U\Sigma V^\top$ where the columns of $U$ and $V$ are orthonormal and the matrix $\Sigma$ is diagonal with positive real entries.
+Let $A$ be some $m\times n$ matrix. We are interested in finding the basis vectors $\vec{v_i}$ of the row space of $A$ in $R^m$ such that after transformation gives scaled basis vectors $\vec{u_i}$ of the column space of $A$ in $R^n$, that is
+\begin{align}
+    A\vec{v_i}= \sigma _i \vec{u_i}
+\end{align}
+$\vec{v_i}$ are the columns of $V$ and $\vec{u_i}$ are the columns of $U$. $\sigma _i$ is the factor by which the transformed vector is scaled, $\sigma _i$ being the diagonals of matrix $\Sigma$. Adding Eq 1 for all i's upto r, we get $AV= U\Sigma$.
+
+multipying by $V^\top$ on right
+\begin{align}
+    AVV^\top= U \Sigma V^\top 
+\end{align}
+Since $V$ is orthonormal matrix
+\begin{align}
+    A =  U \Sigma V^\top
+\end{align}
+
+In this video it is shown that by computing $A^\top A$ we can compute these singular values $\sigma _i$ and $\vec{v_i}$ in the following manner.   
+\begin{align}
+    A = U \Sigma V^\top 
+\end{align}
+\begin{align}
+   A^\top A =   V\Sigma U^\top U \Sigma V^\top
+\end{align}
+\begin{align}
+    A^\top A =   V\Sigma \Sigma V^\top = V \Sigma^2 V^\top
+\end{align}
+    This is a case of spectral decomposition in which $\Sigma^2$ contains eigenvalues of $A^\top A$ as diagonals. Matrix $V$ can be found by computing eigenvectors of $A^\top A$.For $U$ eliminate $V^\top V$ by taking $A A^\top$.
+\section{Abstract}
+
+The SVD is useful in many tasks. The data matrix $A$ is close to a matrix of low rank(k) and it is useful to find a low rank matrix which is a good approximation to the data matrix .From the singular value decomposition of $A$, we can get the matrix $A_k$ of rank k which best approximates $A$. This is what we will be using as the basis for image compression.
+
+
+\section{Algorithm Selection}
+
+There are several algorithms that can be used to calculate the eigenvalues of a matrix.
+Some of these algorithms are listed below.
+
+\input{tables/table1}
+Nevertheless, for this project I have use Power Iteration method due to relatively 
+code for algorithm can  be found in \em codes/c\_main/main.c \em
+\section{Algorithm}
+ \begin{enumerate}
+     \item Read image using \em stbi\_load \em and storing it in 1D Array($m\times n$)
+     \item multiply to get $A^\top A$
+     \item Use Power iteration method to get most dominant eigenvector of $A^\top A$. Make sure to normalise it during each iteration.
+     \item Corresponding eigenvalue($\lambda$) can be found by norm of  $A^\top A\vec{v}$ where $\vec{v}$ is the eigenvector
+     \item To find the next eigenvector we remove the contribution of $\vec{v}$ from $A^\top A$, that is 
+     \item $A^\top A\leftarrow A^\top A - \lambda v v^\top$ and repeat from step 3 to find the next dominant eigen vector
+     \item These eigenvectors will form  basis of row space for the matrix $A$ and eigenvalues of $A^\top A$ will serve as squares of singular values. Basis of column space can be computed by $u = \frac{Av}{||Av||}=\frac{Av}{\sigma}$ 
+     \item Take only best k eigenvalues to reconstruct the matrix $A_k$ via Truncated SVD.
+     \item Reconstruct the matrix $A_k$ by the given equation $A_k = U_k \Sigma _k V_k^\top$ 
+     \item In the code, $A_k$ is reconstructed by adding $\sigma _i \vec{u_i} \vec{v_i}^\top$ over i = 1 to k, that is
+     \item $A = \sum_{i=1}^{k}\sigma_i\vec{u_i}\vec{v_i}^\top$  
+     \item use \em stbi\_write\_jpg \em to write 1D Array back to jpg.
+ \end{enumerate}
+
+\textbf{Note}: iteration is set to over 200 and the reconstructed image for different values of k is shown in the next section.
+\newpage
+\section{Image output}
+For Einstein.jpg
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/einstein.jpg}
+        \caption{Original}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/einsteinK_100.jpg}
+        \caption{k = 100}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/einsteinK_10.jpg}
+        \caption{k = 10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/einsteinK_20.jpg}
+        \caption{k = 20}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/einsteinK_50.jpg}
+        \caption{k = 50}
+    \end{subfigure}
+    \caption{Effect of rank $k$ on compression quality.}
+\end{figure}
+For globe.jpg
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/globe.jpg}
+        \caption{Original}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/globeK_100.jpg}
+        \caption{k = 100}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/globeK_10.jpg}
+        \caption{k = 10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/globeK_20.jpg}
+        \caption{k = 20}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/globeK_50.jpg}
+        \caption{k = 50}
+    \end{subfigure}
+    \caption{Effect of rank $k$ on compression quality.}
+\end{figure}
+\newpage
+For greyscale.png
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/greyscale.png}
+        \caption{Original}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/greyscaleK_100.jpg}
+        \caption{k = 100}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/greyscaleK_10.jpg}
+        \caption{k = 10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/greyscaleK_20.jpg}
+        \caption{k = 20}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figs/greyscaleK_50.jpg}
+        \caption{k = 50}
+    \end{subfigure}
+    \caption{Effect of rank $k$ on compression quality.}
+\end{figure}
+\newpage
+\section{Error Analysis}
+\input{tables/table2}
+\section{Conclusion}
+Image compression through power iteration is efficient and easy to implement and hence a good choice for image compression.
+\end{document}
