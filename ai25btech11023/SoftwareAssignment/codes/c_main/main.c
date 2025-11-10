@@ -70,7 +70,7 @@ void powerIteration(int n, double *A, double *b, double *sigma, int iterate, dou
         for(int i=0;i<n;i++) b_o[i]=b[i];
     }
     matvec(n,n,A,b,Ab);
-    *sigma = normvec(Ab,n);
+    *sigma = normvec(Ab,n)/normvec(b,n);
 }
 
 //A<--- A - sigma *(b @ b^\top)
